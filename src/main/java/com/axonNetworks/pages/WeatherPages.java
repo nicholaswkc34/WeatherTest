@@ -9,6 +9,7 @@ import com.axonNetworks.pojo.Weather;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$x;
@@ -33,7 +34,7 @@ public class WeatherPages {
 
     public void inputSearchCriteria(String weatherCountry) {
         methods.waitUntilPageIsReady();
-        //$(searchTextBox).shouldBe(Condition.interactable);
+        $(searchTextBox).shouldBe(Condition.interactable);
         $(searchTextBox).click();
         $(searchTextBox).sendKeys(weatherCountry);
         $x(searchOpt).click();
@@ -78,10 +79,10 @@ public class WeatherPages {
                 humidity += String.valueOf(humidityArray[i]) + "]";
                 weaObj.setHumidity($x(humidity).getText());
 
-
                 resultList.add(weaObj);
             }
 
+            // Write to CSV file
             try(CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT)) {
 
                 for (int i = 0; i < 10; i++) {
@@ -100,6 +101,10 @@ public class WeatherPages {
     }
 
     public void createSummaryReport(ArrayList<Weather> arrayList) {
+        ArrayList<Integer> highTemperatureList = new ArrayList<Integer>() ;
+        ArrayList<Integer> lowTemperatureList = new ArrayList<Integer>();
+        ArrayList<Integer> humidityList = new ArrayList<Integer>();
+
         int totalHighTemperature = 0, totalLowTemperature = 0, totalHumidity = 0;
         int averageHighTemperature = 0, averageLowTemperature = 0, averageHumidity = 0;
 
@@ -107,18 +112,35 @@ public class WeatherPages {
             totalHighTemperature += Integer.valueOf(aWeather.getHighTemperature().replaceAll("[^0-9]", ""));
             totalLowTemperature += Integer.valueOf(aWeather.getLowTemperature().replaceAll("[^0-9]", ""));
             totalHumidity += Integer.valueOf(aWeather.getHumidity().replaceAll("[^0-9]", ""));
+
+            highTemperatureList.add(Integer.valueOf(aWeather.getHighTemperature().replaceAll("[^0-9]", "")));
+            lowTemperatureList.add(Integer.valueOf(aWeather.getLowTemperature().replaceAll("[^0-9]", "")));
+            humidityList.add(Integer.valueOf(aWeather.getHumidity().replaceAll("[^0-9]", "")));
         }
 
+        // Divided by zero check
         if(totalHighTemperature != 0) { averageHighTemperature =  totalHighTemperature / 10; }
         if(totalLowTemperature != 0) { averageLowTemperature = totalLowTemperature / 10; }
         if(totalHumidity != 0) { averageHumidity = totalHumidity / 10; }
 
+
+        // Summary report Save to file
         try {
             FileWriter out = new FileWriter(System.getProperty("user.dir") + "\\result\\" + "summaryReport.csv");
 
             try (CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT)) {
-                printer.printRecords(averageHighTemperature, averageLowTemperature,
-                        averageHumidity);
+                printer.printRecords("10 Days Singapore Weather Summary Report\n",
+                        "Average High Temperature: " + averageHighTemperature,
+                        "Minimum High Temperature: " + Collections.min(highTemperatureList),
+                        "Maximum High Temperature: " + Collections.max(highTemperatureList) + "\n",
+
+                        "Average Low Temperature: " + averageLowTemperature,
+                        "Minimum Low Temperature: " + Collections.min(lowTemperatureList),
+                        "Maximum Low Temperature: " + Collections.max(lowTemperatureList) + "\n",
+
+                        "Average Humidity: " + averageHumidity,
+                        "Minimum Humidity: " + Collections.min(humidityList),
+                        "Maximum Humidity: " + Collections.max(humidityList));
 
                 printer.flush();
             }

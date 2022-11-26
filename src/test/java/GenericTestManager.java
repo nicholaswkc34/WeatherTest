@@ -55,15 +55,6 @@ public class GenericTestManager extends TestManager {
 
     }
 
-    @Test
-    public void submitShoppingList() {
-        extentTest = extentManager.getExtentReports().createTest("testSubmitShoppingList");
-
-        String weatherCountry = (String) propertiesManager.getProperties().get("SEARCH_CRITERIA");
-        weatherPages.inputSearchCriteria(weatherCountry);
-        weatherPages.navigateNext10Days();
-
-    }
 }
 
 /*
